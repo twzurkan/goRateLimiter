@@ -48,17 +48,20 @@ func (l *RateLimiter) incrementAndSetExpire(ip string, duration time.Duration) i
 func (l *RateLimiter) Throttle(ip string, limit int, duration int) bool {
 
 	_, err := l.rdb.Get(ctx, ip).Result()
+	var val int64 = 0
 	if err == redis.Nil {
-		l.incrementAndSetExpire(ip, time.Duration(duration))
+		val = l.incrementAndSetExpire(ip, time.Duration(duration))
 		fmt.Printf("key does not exist, %v\n", ip)
 	} else if err != nil {
 		panic(err)
 	} else {
-		val := l.rdb.Incr(ctx, ip)
-		fmt.Printf("here is %d\n", val)
-		if val.Val() > int64(limit) {
-			return true
-		}
+		v := l.rdb.Incr(ctx, ip)
+		fmt.Printf("here is %d\n", v)
+		val = v.Val()
+	}
+
+	if val > int64(limit) {
+		return true
 	}
 
 	return false
