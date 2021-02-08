@@ -90,11 +90,18 @@ func rateLimitMiddleware(next http.Handler) http.Handler {
 		ip := getClientIp(r)
 
 		attributes := map[string]interface{}{
-			"location": r.Header["X-Location"][0],
-			"time":    r.Header["X-Time"][0],
 			"ip":      ip,
 		}
 
+		locations := r.Header["X-Location"]
+		times := r.Header["X-Time"]
+		if locations != nil {
+			attributes["location"] = locations[0]
+		}
+		if times != nil {
+			attributes["time"] = times[0]
+		}
+		
 		user := entities.UserContext{
 			ID:         "userId",
 			Attributes: attributes,
